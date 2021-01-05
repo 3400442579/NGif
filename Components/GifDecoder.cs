@@ -244,8 +244,8 @@ namespace Gif.Components
 					{
 						// fill last image rect area with background color
 						Graphics g = Graphics.FromImage( image );
-						Color c = Color.Empty;
-						if (transparency) 
+                        Color c;
+                        if (transparency) 
 						{
 							c = Color.FromArgb( 0, 0, 0, 0 ); 	// assume background is transparent
 						} 
@@ -619,34 +619,34 @@ namespace Gif.Components
 		 * @param ncolors int number of colors to read
 		 * @return int array containing 256 colors (packed ARGB with full alpha)
 		 */
-		protected int[] ReadColorTable(int ncolors) 
+		protected int[] ReadColorTable(int ncolors)
 		{
 			int nbytes = 3 * ncolors;
 			int[] tab = null;
 			byte[] c = new byte[nbytes];
 			int n = 0;
-			try 
+			try
 			{
-				n = inStream.Read(c, 0, c.Length );
-			} 
-			catch (IOException) 
+				n = inStream.Read(c, 0, c.Length);
+			}
+			catch (IOException)
 			{
 			}
-			if (n < nbytes) 
+			if (n < nbytes)
 			{
 				status = STATUS_FORMAT_ERROR;
-			} 
-			else 
+			}
+			else
 			{
 				tab = new int[256]; // max size to avoid bounds checks
 				int i = 0;
 				int j = 0;
-				while (i < ncolors) 
+				while (i < ncolors)
 				{
-					int r = ((int) c[j++]) & 0xff;
-					int g = ((int) c[j++]) & 0xff;
-					int b = ((int) c[j++]) & 0xff;
-					tab[i++] = (int) (0xff000000 | (r << 16) | (g << 8) | b );
+					int r = c[j++] & 0xff;
+					int g = c[j++] & 0xff;
+					int b = c[j++] & 0xff;
+					tab[i++] = (int)(0xff000000 | ((uint)r << 16) | ((uint)g << 8) | (uint)b);
 				}
 			}
 			return tab;

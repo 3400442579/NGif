@@ -55,7 +55,7 @@ namespace Gif.Components
     {
         protected int width; // image size
         protected int height;
-        protected Color transparent = Color.Empty; // transparent color if given
+        protected Color transparent = Color.Transparent; // transparent color if given
         protected int transIndex; // transparent index in color table
         protected int repeat = -1; // no repeat
         protected int delay = 0; // frame delay (hundredths)
@@ -67,6 +67,7 @@ namespace Gif.Components
         protected Image image; // current frame
         protected byte[] pixels; // BGR byte array from frame
         protected byte[] indexedPixels; // converted frame indexed to palette
+        protected bool[] trans;
         protected int colorDepth; // number of bit planes
         protected byte[] colorTab; // RGB palette
         protected bool[] usedEntry = new bool[256]; // active palette entries
@@ -307,7 +308,7 @@ namespace Gif.Components
 		 */
         public bool Start()
         {
-            bool ok = true;
+            bool ok;
             try
             {
                 ok = Start(new MemoryStream(10 * 1024));
@@ -353,36 +354,33 @@ namespace Gif.Components
             int len = pixels.Length;
             int nPix = len / 3;
             indexedPixels = new byte[nPix];
+
             NeuQuant nq = new NeuQuant(pixels, len, sample);
             // initialize quantizer
-            colorTab = nq.Process(); // create reduced palette
-                                     // convert map from BGR to RGB
-                                     //			for (int i = 0; i < colorTab.Length; i += 3) 
-                                     //			{
-                                     //				byte temp = colorTab[i];
-                                     //				colorTab[i] = colorTab[i + 2];
-                                     //				colorTab[i + 2] = temp;
-                                     //				usedEntry[i / 3] = false;
-                                     //			}
-                                     // map image pixels to new palette
+            colorTab = nq.Process();
             int k = 0;
             for (int i = 0; i < nPix; i++)
             {
-                int index =
-                    nq.Map(pixels[k++] & 0xff,
-                    pixels[k++] & 0xff,
-                    pixels[k++] & 0xff);
+                bool btr = trans[k / 3];
+
+                int index = nq.Map(pixels[k++] & 0xff,
+                       pixels[k++] & 0xff,
+                       pixels[k++] & 0xff);
+                if (btr) index = 0xFF;
+
                 usedEntry[index] = true;
                 indexedPixels[i] = (byte)index;
             }
             pixels = null;
             colorDepth = 8;
             palSize = 7;
+
             // get closest match to transparent color if specified
             if (transparent != Color.Empty)
             {
                 //transIndex = FindClosest(transparent);
-                transIndex = nq.Map(transparent.B, transparent.G, transparent.R);
+                //transIndex = nq.Map(transparent.B, transparent.G, transparent.R);
+                transIndex = 0xFF;
             }
         }
 
@@ -424,13 +422,10 @@ namespace Gif.Components
             int w = image.Width;
             int h = image.Height;
             //		int type = image.GetType().;
-            if ((w != width)
-                || (h != height)
-                )
+            if ((w != width) || (h != height))
             {
                 // create new image with right size/format
-                Image temp =
-                    new Bitmap(width, height);
+                Image temp = new Bitmap(width, height);
                 Graphics g = Graphics.FromImage(temp);
                 g.DrawImage(image, 0, 0);
                 image = temp;
@@ -440,24 +435,29 @@ namespace Gif.Components
 				ToDo:
 				improve performance: use unsafe code 
 			*/
-            pixels = new Byte[3 * image.Width * image.Height];
+
+            pixels = new byte[3 * image.Width * image.Height];
+            trans = new bool[image.Width * image.Height];
             int count = 0;
-            Bitmap tempBitmap = new Bitmap(image);
+            
+            Bitmap tempBitmap = new Bitmap(image); 
             for (int th = 0; th < image.Height; th++)
             {
                 for (int tw = 0; tw < image.Width; tw++)
                 {
                     Color color = tempBitmap.GetPixel(tw, th);
+
+                    trans[count / 3] = color.A < 125;
+
                     pixels[count] = color.R;
                     count++;
                     pixels[count] = color.G;
                     count++;
                     pixels[count] = color.B;
                     count++;
+
                 }
             }
-
-            //		pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
         }
 
         /**
@@ -575,8 +575,7 @@ namespace Gif.Components
 		 */
         protected void WritePixels()
         {
-            LZWEncoder encoder =
-                new LZWEncoder(width, height, indexedPixels, colorDepth);
+            LZWEncoder encoder = new LZWEncoder(/*width, height,*/ indexedPixels, colorDepth);
             encoder.Encode(ms);
         }
 

@@ -13,15 +13,14 @@ namespace Example
 		{
 			/* create Gif */
 			//you should replace filepath
-			String [] imageFilePaths = new String[]{"c:\\01.png","c:\\02.png","c:\\03.png"}; 
-			String outputFilePath = "c:\\test.gif";
+			string[] imageFilePaths = new string[] { @"C:\Users\jxw\Desktop\gif\c\01a.png", @"C:\Users\jxw\Desktop\gif\c\01d.png", @"C:\Users\jxw\Desktop\gif\c\01c.png" };
+			string outputFilePath = @"C: \Users\jxw\Desktop\gif\c\test.gif";
 			AnimatedGifEncoder e = new AnimatedGifEncoder();
             
-            // read file as memorystream
-		    byte[] fileBytes = File.ReadAllBytes(outputFilePath);
-            MemoryStream memStream = new MemoryStream(fileBytes);
-            e.Start(memStream);
+          
+            e.Start();
 			e.SetDelay(500);
+			e.SetTransparent(Color.Transparent);
 			//-1:no repeat,0:always repeat
 			e.SetRepeat(0);
 			for (int i = 0, count = imageFilePaths.Length; i < count; i++ ) 
@@ -29,6 +28,8 @@ namespace Example
 				e.AddFrame( Image.FromFile( imageFilePaths[i] ) );
 			}
 			e.Finish();
+			e.Output(outputFilePath);
+
 			/* extract Gif */
 			string outputPath = "c:\\";
 			GifDecoder gifDecoder = new GifDecoder();

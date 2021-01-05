@@ -43,7 +43,7 @@ namespace Gif.Components
 {
 	public class NeuQuant 
 	{
-		protected static readonly int netsize = 256; /* number of colours used */
+		protected static readonly int netsize = 255; /* number of colours used */
 		/* four primes near 500 - assume no image has a length so large */
 		/* that it is divisible by all four primes */
 		protected static readonly int prime1 = 499;
@@ -66,15 +66,15 @@ namespace Gif.Components
 
 		/* Network Definitions
 		   ------------------- */
-		protected static readonly int maxnetpos = (netsize - 1);
+		protected static readonly int maxnetpos = netsize - 1;
 		protected static readonly int netbiasshift = 4; /* bias for colour values */
 		protected static readonly int ncycles = 100; /* no. of learning cycles */
 
 		/* defs for freq and bias */
 		protected static readonly int intbiasshift = 16; /* bias for fractions */
-		protected static readonly int intbias = (((int) 1) << intbiasshift);
+		protected static readonly int intbias = (1 << intbiasshift);
 		protected static readonly int gammashift = 10; /* gamma = 1024 */
-		protected static readonly int gamma = (((int) 1) << gammashift);
+		protected static readonly int gamma = (1 << gammashift);
 		protected static readonly int betashift = 10;
 		protected static readonly int beta = (intbias >> betashift); /* beta = 1/1024 */
 		protected static readonly int betagamma =
@@ -83,21 +83,21 @@ namespace Gif.Components
 		/* defs for decreasing radius factor */
 		protected static readonly int initrad = (netsize >> 3); /* for 256 cols, radius starts */
 		protected static readonly int radiusbiasshift = 6; /* at 32.0 biased by 6 bits */
-		protected static readonly int radiusbias = (((int) 1) << radiusbiasshift);
+		protected static readonly int radiusbias = (1 << radiusbiasshift);
 		protected static readonly int initradius = (initrad * radiusbias); /* and decreases by a */
 		protected static readonly int radiusdec = 30; /* factor of 1/30 each cycle */
 
 		/* defs for decreasing alpha factor */
 		protected static readonly int alphabiasshift = 10; /* alpha starts at 1.0 */
-		protected static readonly int initalpha = (((int) 1) << alphabiasshift);
+		protected static readonly int initalpha = (1 << alphabiasshift);
 
 		protected int alphadec; /* biased by 10 bits */
 
 		/* radbias and alpharadbias used for radpower calculation */
 		protected static readonly int radbiasshift = 8;
-		protected static readonly int radbias = (((int) 1) << radbiasshift);
+		protected static readonly int radbias = (1 << radbiasshift);
 		protected static readonly int alpharadbshift = (alphabiasshift + radbiasshift);
-		protected static readonly int alpharadbias = (((int) 1) << alpharadbshift);
+		protected static readonly int alpharadbias = (1 << alpharadbshift);
 
 		/* Types and Global Variables
 		-------------------------- */
@@ -123,7 +123,6 @@ namespace Gif.Components
 		   ----------------------------------------------------------------------- */
 		public NeuQuant(byte[] thepic, int len, int sample) 
 		{
-
 			int i;
 			int[] p;
 
@@ -141,21 +140,28 @@ namespace Gif.Components
 				bias[i] = 0;
 			}
 		}
-	
-		public byte[] ColorMap() 
+
+		public byte[] ColorMap()
 		{
-			byte[] map = new byte[3 * netsize];
+			byte[] map = new byte[3 * (netsize + 1)];
 			int[] index = new int[netsize];
 			for (int i = 0; i < netsize; i++)
 				index[network[i][3]] = i;
 			int k = 0;
-			for (int i = 0; i < netsize; i++) 
+			for (int i = 0; i < netsize; i++)
 			{
 				int j = index[i];
-				map[k++] = (byte) (network[j][0]);
-				map[k++] = (byte) (network[j][1]);
-				map[k++] = (byte) (network[j][2]);
+				map[k++] = (byte)(network[j][0]);
+				map[k++] = (byte)(network[j][1]);
+				map[k++] = (byte)(network[j][2]);
 			}
+			if (netsize == 255)
+			{
+				map[k++] = 0;
+				map[k++] = 0;
+				map[k++] = 0;
+			}
+
 			return map;
 		}
 	

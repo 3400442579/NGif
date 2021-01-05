@@ -25,13 +25,12 @@ namespace Gif.Components
 {
 	public class LZWEncoder 
 	{
-
 		private static readonly int EOF = -1;
-
-		private int imgW, imgH;
-		private byte[] pixAry;
-		private int initCodeSize;
-		private int remaining;
+        //private readonly int imgW;
+        //private readonly int imgH;
+        private readonly byte[] pixAry;
+		private readonly int initCodeSize;
+		//private int remaining;
 		private int curPixel;
 
 		// GIFCOMPR.C       - GIF Image compression routines
@@ -57,14 +56,13 @@ namespace Gif.Components
 		//              Joe Orost              (decvax!vax135!petsd!joe)
 
 		int n_bits; // number of bits/code
-		int maxbits = BITS; // user settable max # bits/code
+        readonly int maxbits = BITS; // user settable max # bits/code
 		int maxcode; // maximum code, given n_bits
-		int maxmaxcode = 1 << BITS; // should NEVER generate this code
+        readonly int maxmaxcode = 1 << BITS; // should NEVER generate this code
 
-		int[] htab = new int[HSIZE];
-		int[] codetab = new int[HSIZE];
-
-		int hsize = HSIZE; // for dynamic table sizing
+        readonly int[] htab = new int[HSIZE];
+        readonly int[] codetab = new int[HSIZE];
+        readonly int hsize = HSIZE; // for dynamic table sizing
 
 		int free_ent = 0; // first unused entry
 
@@ -106,8 +104,7 @@ namespace Gif.Components
 
 		int cur_accum = 0;
 		int cur_bits = 0;
-
-		int [] masks =
+		readonly int[] masks =
 		{
 			0x0000,
 			0x0001,
@@ -125,19 +122,20 @@ namespace Gif.Components
 			0x1FFF,
 			0x3FFF,
 			0x7FFF,
-			0xFFFF };
+			0xFFFF
+			};
 
 		// Number of characters so far in this 'packet'
 		int a_count;
 
-		// Define the storage for the packet accumulator
-		byte[] accum = new byte[256];
+        // Define the storage for the packet accumulator
+        readonly byte[] accum = new byte[256];
 
 		//----------------------------------------------------------------------------
-		public LZWEncoder(int width, int height, byte[] pixels, int color_depth) 
+		public LZWEncoder(/*int width, int height,*/ byte[] pixels, int color_depth) 
 		{
-			imgW = width;
-			imgH = height;
+			//imgW = width;
+			//imgH = height;
 			pixAry = pixels;
 			initCodeSize = Math.Max(2, color_depth);
 		}
@@ -247,17 +245,15 @@ namespace Gif.Components
 			Output(ent, outs);
 			Output(EOFCode, outs);
 		}
-	
+
 		//----------------------------------------------------------------------------
-		public void Encode( Stream os)
+		public void Encode(Stream os)
 		{
-			os.WriteByte( Convert.ToByte( initCodeSize) ); // write "initial code size" byte
+			os.WriteByte(Convert.ToByte(initCodeSize)); // write "initial code size" byte
 
-			remaining = imgW * imgH; // reset navigation variables
+			//remaining = imgW * imgH; // reset navigation variables
 			curPixel = 0;
-
 			Compress(initCodeSize + 1, os); // compress and write the pixel data
-
 			os.WriteByte(0); // write block terminator
 		}
 	
